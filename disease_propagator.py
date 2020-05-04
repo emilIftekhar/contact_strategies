@@ -25,6 +25,8 @@ class Disease_Propagator:
             random_order = np.random.permutation(population_size)
             for ID in random_order:
                 person1 = network.nodes[ID]['person']
+                if len(person1.contacts)<=0:
+                    continue
                 contact_ID = random.choice(person1.contacts)
                 person2 =  network.nodes[contact_ID]['person']
                 if person1.ID in S and person2.ID in I:
