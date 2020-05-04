@@ -8,7 +8,7 @@ class network_handler(nx.Graph):
         self.connected_watts_strogatz_graph(population_size, average_degree, random_edge_probability)
         
         # Attributes
-        self.__population = {}
+        self._population = {}
         self.random_edge_probability = random_edge_probability
         self.population_size = population_size
         self.average_degree = average_degree
@@ -17,7 +17,7 @@ class network_handler(nx.Graph):
         self.create_population_dict()
         
         # Add contacts to node attribute
-        for node, value in self.__population.items():
+        for node, value in self._population.items():
             self.nodes[node]['person'] = value
         
     def create_population_dict(self):
@@ -25,7 +25,7 @@ class network_handler(nx.Graph):
             # Get the edgeds for each node (connected other nodes)
             contacts = [edge[1] for edge in self.edges(i)]
             person = Person(i, contacts)
-            self.__population[i] = person       
+            self._population[i] = person       
             
     def watts_strogatz_graph(self, n, k, p, seed=None):
         if k>=n:
