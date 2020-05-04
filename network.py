@@ -2,13 +2,13 @@ import networkx as nx
 import random
 from person import Person
 
-class Network(nx.Graph):      
+class Network(nx.Graph):
     def __init__(self, population_size, average_degree, random_edge_probability):
         super().__init__()
         self.connected_watts_strogatz_graph(population_size, average_degree, random_edge_probability)
 
         # Attributes
-        self._population = {}
+        self.__population = {}
         self.random_edge_probability = random_edge_probability
         self.population_size = population_size
         self.average_degree = average_degree
@@ -17,7 +17,7 @@ class Network(nx.Graph):
         self.create_population_dict()
 
         # Add contacts to node attribute
-        for node, value in self._population.items():
+        for node, value in self.__population.items():
             self.nodes[node]['person'] = value
 
     def create_population_dict(self):
@@ -25,7 +25,10 @@ class Network(nx.Graph):
             # Get the edgeds for each node (connected other nodes)
             contacts = [edge[1] for edge in self.edges(i)]
             person = Person(i, contacts)
-            self._population[i] = person
+            self.__population[i] = person
+
+    def get_population(self):
+        return self.__population
 
 ################################################################################
 
