@@ -4,7 +4,7 @@ import random
 class Disease_Propagator:
     def __init__(self, time_limit, mean_time_until_quarantine, std_dev_time_until_quarantine):
         self.time_limit = time_limit
-        
+        self.time = 0
         # Initialize compartment size time series
         self.S_t = [] # Number of susceptibles
         self.I_t = [] # Number of infected
@@ -19,8 +19,8 @@ class Disease_Propagator:
         """
 
         population_size = network.population_size
-        time = 0
-        while time < self.time_limit:
+        
+        while self.time < self.time_limit:
             # Simulate one random interaction process for each person in population
             random_order = np.random.permutation(population_size)
             for ID in random_order:
@@ -29,11 +29,13 @@ class Disease_Propagator:
                 person2 =  network.nodes[contact_ID]['person']
                 if person1.ID in S and person2.ID in I:
                     S.remove(person1.ID)
-                    person1.time_to_quarantine = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    time = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    person1.time_to_quarantine = time if time>0 else 0
                     I.append(person1.ID)
                 elif  person1.ID in I and person2.ID in S:
                     S.remove(person2.ID)
-                    person2.time_to_quarantine = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    time = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    person2.time_to_quarantine = time if time>0 else 0
                     I.append(person2.ID)
 
             # Random infection in public
@@ -42,7 +44,8 @@ class Disease_Propagator:
                 person = network.nodes[ID]['person']
                 if random.uniform(0,1) < p*len(I)/(len(S)+len(I)):
                     infected.append(ID)
-                    person.time_to_quarantine = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    time = int(np.random.normal(self._time_until_quarantine['mean'], self._time_until_quarantine['std_dev']))
+                    person.time_to_quarantine = time if time>0 else 0
                     I.append(person.ID)
             for ID in infected:
                 S.remove(ID)
@@ -74,6 +77,6 @@ class Disease_Propagator:
             self.S_t.append(len(S))
             self.I_t.append(len(I)+len(Q))
 
-            time += 1
+            self.time += 1
             
         return (self.S_t, self.I_t)
