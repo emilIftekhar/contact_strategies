@@ -2,7 +2,7 @@ import networkx as nx
 import random
 from person import Person
 
-class network(nx.Graph):      
+class Network(nx.Graph):      
     def __init__(self, population_size, average_degree, random_edge_probability):
         super().__init__()
         self.connected_watts_strogatz_graph(population_size, average_degree, random_edge_probability)
