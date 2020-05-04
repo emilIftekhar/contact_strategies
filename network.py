@@ -14,6 +14,7 @@ class Network(nx.Graph):
         self.average_degree = average_degree
 
         # Create population dict see below
+        # EMIL: I wondering if we even need that and should just use the network structure instead.
         self.create_population_dict()
 
         # Add contacts to node attribute
@@ -26,6 +27,12 @@ class Network(nx.Graph):
             contacts = [edge[1] for edge in self.edges(i)]
             person = Person(i, contacts)
             self.__population[i] = person
+
+    def update_contacts(self):
+        for i in range(self.population_size):
+            # Get the edgeds for each node (connected other nodes)
+            contacts = [edge[1] for edge in self.edges(i)]
+            self.__population[i].contacts = contacts
 
     def get_population(self):
         return self.__population
