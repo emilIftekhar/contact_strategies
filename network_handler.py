@@ -111,3 +111,8 @@ class Network_Handler:
 
         temp_network.update_contacts()
         return temp_network
+
+    def analyze_network(self, G):
+        nx.info(network_base)
+        nx.average_shortest_path_length(network_base)
+        nx.average_clustering(network_base)
