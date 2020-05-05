@@ -3,18 +3,19 @@ import random
 from person import Person
 
 class Network(nx.Graph):
-    def __init__(self, population_size, average_degree, random_edge_probability):
+    def __init__(self, population_size, average_degree, random_edge_probability, contact_probability):
         super().__init__()
         self.connected_watts_strogatz_graph(population_size, average_degree, random_edge_probability)
-
-        # Set starting weights
-        self.set_weights()
 
         # Attributes
         self.__population = {}
         self.random_edge_probability = random_edge_probability
         self.population_size = population_size
         self.average_degree = average_degree
+        self.contact_probability = contact_probability
+
+        # Set starting weights
+        self.set_weights()
 
         # Create population dict see below
         # EMIL: I wondering if we even need that and should just use the network structure instead.
@@ -26,7 +27,7 @@ class Network(nx.Graph):
 
     def set_weights(self):
         for edge in list(self.edges):
-            self.edges[edge]['weight'] = 0.2 # the weight describes a contact probability
+            self.edges[edge]['weight'] = self.contact_probability # the weight describes a contact probability
 
     def create_population_dict(self):
         for i in range(self.population_size):
