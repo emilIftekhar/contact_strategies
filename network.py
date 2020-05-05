@@ -7,6 +7,9 @@ class Network(nx.Graph):
         super().__init__()
         self.connected_watts_strogatz_graph(population_size, average_degree, random_edge_probability)
 
+        # Set starting weights
+        self.set_weights()
+
         # Attributes
         self.__population = {}
         self.random_edge_probability = random_edge_probability
@@ -20,6 +23,10 @@ class Network(nx.Graph):
         # Add contacts to node attribute
         for node, value in self.__population.items():
             self.nodes[node]['person'] = value
+
+    def set_weights(self):
+        for edge in list(self.edges):
+            self.edges[edge]['weight'] = 0.2 # the weight describes a contact probability
 
     def create_population_dict(self):
         for i in range(self.population_size):

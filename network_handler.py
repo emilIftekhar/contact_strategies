@@ -83,3 +83,9 @@ class Network_Handler:
 
         temp_network.update_contacts()
         return temp_network
+
+        # Repeating contacts strategy
+        # Compared to network G have half the edges but double weights on remaining
+        def repeating_contacts(self, G):
+            temp_network = copy.deepcopy(G)
+            
