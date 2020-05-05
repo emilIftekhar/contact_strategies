@@ -1,6 +1,7 @@
 import network
 import random
 import copy
+import numpy
 
 class Network_Handler:
     def __init__(self, base_network):
@@ -84,8 +85,29 @@ class Network_Handler:
         temp_network.update_contacts()
         return temp_network
 
-        # Repeating contacts strategy
-        # Compared to network G have half the edges but double weights on remaining
-        def repeating_contacts(self, G):
-            temp_network = copy.deepcopy(G)
-            
+    # Repeating contacts strategy
+    # Compared to network G have half the edges but double weights on remaining
+    def repeating_contacts(self, G, contact_number_allowance):
+        temp_network = copy.deepcopy(G)
+        nodes = list(temp_network.nodes)
+        for node in list(temp_network.nodes):
+            if node in nodes:
+                edges = list(temp_network.edges(node))
+                contact_number = len(edges)
+
+                # select and delete random edges so that node has not more than allowed edges
+                if contact_number > contact_number_allowance:
+                    edges_random_order = numpy.random.permutation(edges)
+                    edges_to_be_deleted = edges_random_order[(contact_number_allowance-1):]
+                    for edge in edges_to_be_deleted:
+                        temp_network.remove_edge(edge[0], edge[1])
+
+                # increase contact probabilities on remaining edges
+                # so that the total contact probability is the same as in G
+                multiplication_factor = contact_number / contact_number_allowance
+                remaining_edges = list(temp_network.edges(node))
+                for edge in remaining_edges:
+                    temp_network.edges[edge]['weight'] *= multiplication_factor
+
+        temp_network.update_contacts()
+        return temp_network
