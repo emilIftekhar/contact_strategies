@@ -68,8 +68,8 @@ class Disease_Propagator:
 
         self.Q = []  # Quarantined
         # Initialize compartment size time series
-        S_t = []  # Number of susceptibles
-        I_t = []  # Number of infected
+        S_t = [len(self.S)]  # Number of susceptibles
+        I_t = [len(self.I)]  # Number of infected
 
         simulation_time = 0
         while simulation_time < self.time_limit:
