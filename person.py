@@ -12,6 +12,6 @@ class Person:
         self.time_to_quarantine = 0
         self.time_to_recovery = 0
 
-        self.contacts = input_contact_list
+        self.asymptomatic = False
 
-    
+        self.contacts = input_contact_list

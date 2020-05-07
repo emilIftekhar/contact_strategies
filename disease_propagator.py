@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import copy
 
 
 class Disease_Propagator:
@@ -9,6 +10,7 @@ class Disease_Propagator:
         time_until_recovery,
         mean_time_until_quarantine,
         std_dev_time_until_quarantine,
+        asymptomatic_probabilty
     ):
         self.time_limit = time_limit
 
@@ -17,28 +19,30 @@ class Disease_Propagator:
             "mean": mean_time_until_quarantine,
             "std_dev": std_dev_time_until_quarantine,
         }
+        self.asymptomatic_probabilty = asymptomatic_probabilty
+
+    def infect(self, person):
+        self.S.remove(person.ID)
+
+        # symptomatic
+        time = int(
+            np.random.normal(
+                self._time_until_quarantine["mean"],
+                self._time_until_quarantine["std_dev"],
+            )
+        )
+        # asymptomatic
+        if random.uniform(0,1) < self.asymptomatic_probabilty:
+            time *=2
+            person.asymptomatic = True
+        person.time_to_quarantine = time if time > 0 else 0
+        self.I.append(person.ID)
 
     def interaction(self, person1, person2):
         if person1.ID in self.S and person2.ID in self.I:
-            self.S.remove(person1.ID)
-            time = int(
-                np.random.normal(
-                    self._time_until_quarantine["mean"],
-                    self._time_until_quarantine["std_dev"],
-                )
-            )
-            person1.time_to_quarantine = time if time > 0 else 0
-            self.I.append(person1.ID)
+            self.infect(person1)
         elif person1.ID in self.I and person2.ID in self.S:
-            self.S.remove(person2.ID)
-            time = int(
-                np.random.normal(
-                    self._time_until_quarantine["mean"],
-                    self._time_until_quarantine["std_dev"],
-                )
-            )
-            person2.time_to_quarantine = time if time > 0 else 0
-            self.I.append(person2.ID)
+            self.infect(person2)
 
     def simulate(self, network, p, number_of_first_infected, contacts_per_timestep):
         """
@@ -58,13 +62,7 @@ class Disease_Propagator:
         for i in range(number_of_first_infected):
             first_infected_ID = random.choice(self.S)
             first_infected = population[first_infected_ID]
-            first_infected.time_to_quarantine = np.random.normal(
-                self._time_until_quarantine["mean"], self._time_until_quarantine["std_dev"]
-            )
-            self.I.append(first_infected.ID)  # Infectious
-            self.S.remove(first_infected.ID)
-
-
+            self.infect(first_infected)
 
         self.Q = []  # Quarantined
         # Initialize compartment size time series
@@ -92,30 +90,25 @@ class Disease_Propagator:
 
             # Random infection in public
             infected = []
-            for ID in self.S:
+            for ID in copy.deepcopy(self.S):
                 person = network.nodes[ID]["person"]
                 if random.uniform(0, 1) < p * len(self.I) / (len(self.S) + len(self.I)):
-                    infected.append(ID)
-                    time = int(
-                        np.random.normal(
-                            self._time_until_quarantine["mean"],
-                            self._time_until_quarantine["std_dev"],
-                        )
-                    )
-                    person.time_to_quarantine = time if time > 0 else 0
-                    self.I.append(person.ID)
-            for ID in infected:
-                self.S.remove(ID)
+                    self.infect(person)
 
             # Quarantining infectious people
+            # or recovering them if they were asymptotic
             quarantined = []
             for ID in self.I:
                 person = network.nodes[ID]["person"]
                 person.time_to_quarantine -= 1
                 if person.time_to_quarantine < 1:
                     quarantined.append(person.ID)
-                    person.time_to_recovery = self.time_until_recovery
-                    self.Q.append(person.ID)
+                    if person.asymptomatic:
+                        person.asymptomatic = False
+                        self.S.append(person.ID)
+                    else:
+                        person.time_to_recovery = self.time_until_recovery
+                        self.Q.append(person.ID)
             for ID in quarantined:
                 self.I.remove(ID)
 
