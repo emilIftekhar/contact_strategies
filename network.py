@@ -26,8 +26,13 @@ class Network(nx.Graph):
             self.nodes[node]['person'] = value
 
     def set_weights(self):
-        for edge in list(self.edges):
-            self.edges[edge]['weight'] = self.contact_probability # the weight describes a contact probability
+        for ID in list(self.edges):
+            self.edges[ID]["weights"]= {}
+
+        for node in self.nodes:
+            for ID in list(self.edges(node)):
+                #if type(self.edges[ID]["weights"]) is None:
+                self.edges[ID]["weights"][node] = 1/len(self.edges(node))
 
     def create_population_dict(self):
         for i in range(self.population_size):
