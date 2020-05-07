@@ -70,17 +70,26 @@ class Disease_Propagator:
         # Initialize compartment size time series
         S_t = [len(self.S)]  # Number of susceptibles
         I_t = [len(self.I)]  # Number of infected
-
+        contacts_per_timestep = 10
         simulation_time = 0
         while simulation_time < self.time_limit:
+            # ------------------------------------------------------------------------------ #
             # Simulate one random interaction process for each person in population
+            # ------------------------------------------------------------------------------ #
+            # We go randomly thru the population
             random_order = np.random.permutation(population_size)
-            for ID in random_order:
-                person1 = network.nodes[ID]["person"]
-                for contact_ID in np.random.permutation(person1.contacts):
-                    person2 = network.nodes[contact_ID]["person"]
-                    if random.uniform(0, 1) < network.edges[(ID, contact_ID)]["weight"]:
-                        self.interaction(person1, person2)
+
+            #For every person we draw N random contacts from therer contacts list
+            #and try to infect them this is depending on weights
+            for node_ID in random_order:
+                node = network.nodes[node_ID]
+                edge_IDs = network.edges(node_ID)
+                weights = [network.edges[edge_ID]["weights"][node_ID] for edge_ID in edge_IDs]
+                neighbor_nodes = [edge_ID[1] for edge_ID in edge_IDs]
+
+                neighbor_nodes_random = np.random.choice(neighbor_nodes,contacts_per_timestep,weights)    
+                for neighbor_node_random in neighbor_nodes_random:
+                    self.interaction(network.nodes[node_ID]["person"], network.nodes[neighbor_node_random]["person"])
 
             # Random infection in public
             infected = []
