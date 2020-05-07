@@ -86,7 +86,8 @@ class Disease_Propagator:
 
                 neighbor_nodes_random = np.random.choice(neighbor_nodes,contacts_per_timestep,weights)
                 for neighbor_node_random in neighbor_nodes_random:
-                    self.interaction(network.nodes[node_ID]["person"], network.nodes[neighbor_node_random]["person"])
+                    if random.uniform(0,1) < 0.1:
+                        self.interaction(network.nodes[node_ID]["person"], network.nodes[neighbor_node_random]["person"])
 
             # Random infection in public
             infected = []
