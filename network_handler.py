@@ -7,33 +7,7 @@ class Network_Handler:
     def __init__(self, base_network):
         self.base_network = base_network
 
-    # Randomly sever ties for every contact.
-    # Per node select randomly chosen edge and delete it.
-    # The other node of the edge does NOT have to delete an additional tie later.
-    def random_reduction(self):
-        temp_network = copy.deepcopy(self.base_network)
-        nodes = list(temp_network.nodes)
-        for node in list(temp_network.nodes):
-            if node in nodes:
-                edges = list(temp_network.edges(node))
-                if len(edges) > 0:
-                    random_edge = random.choice(edges)
-                    other_node = random_edge[1]
 
-                    # remove other node from iteration
-                    if other_node in nodes:
-                        nodes.remove(other_node)
-
-                    temp_network.remove_edge(node, other_node)
-
-        self.randomly_reduced_network = temp_network
-        self.randomly_reduced_network.update_contacts()
-        return self.randomly_reduced_network
-
-    # calculate how many edges there are less in the randomly reduced network compared to the base network
-    def calculate_reduced_number_of_edges(self):
-        edge_difference = len(list(self.base_network.edges)) - len(list(self.randomly_reduced_network.edges))
-        return edge_difference
 
     # Triadic strategy.
     # Remove edges so that we have as many as in the random reduction case.
@@ -45,13 +19,9 @@ class Network_Handler:
             if node in nodes:
                 edges = list(temp_network.edges(node))
                 alters = [edge[1] for edge in edges]
-                edge_not_deleted = True
-                i = 0
-
-                # try to find contact without mutual friends and delete edge
-                while len(edges) > 0 and edge_not_deleted and i<10*len(alters):
-                    random_alter = random.choice(alters)
-                    edges_of_alter = list(temp_network.edges(random_alter))
+                number_of_deleted_edges = 0
+                for alter in alters:
+                    edges_of_alter = list(temp_network.edges(alter))
 
                     # get third contacts of other node
                     contacts_of_alter = [edge[1] for edge in edges_of_alter]
@@ -60,27 +30,14 @@ class Network_Handler:
                     # check if they have mutual contacts
                     # if not / if disjoint==True remove edge
                     if set(alters).isdisjoint(contacts_of_alter):
+                        temp_network.edges[(node, alter)]['weights'][node] = 0
+                        number_of_deleted_edges += 1
 
-                        # remove other node from iteration
-                        if random_alter in nodes:
-                            nodes.remove(random_alter)
-
-                        temp_network.remove_edge(node, random_alter)
-                        edge_not_deleted = False
-
-                    i += 1
-
-                # if it didnt work then just delete random edge
-                if len(alters) > 0 and edge_not_deleted:
-                    random_edge = random.choice(edges)
-                    other_node = random_edge[1]
-
-                    # remove other node from iteration
-                    if other_node in nodes:
-                        nodes.remove(other_node)
-
-                    temp_network.remove_edge(node, other_node)
-
+                # Make weights probabilites again
+                effective_edge_number = len(edges)-number_of_deleted_edges
+                if effective_edge_number > 0:
+                    for edge in edges:
+                        temp_network.edges[edge]['weights'][node] /= effective_edge_number
 
         temp_network.update_contacts()
         return temp_network

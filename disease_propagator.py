@@ -40,7 +40,7 @@ class Disease_Propagator:
             person2.time_to_quarantine = time if time > 0 else 0
             self.I.append(person2.ID)
 
-    def simulate(self, network, p, number_of_first_infected):
+    def simulate(self, network, p, number_of_first_infected, contacts_per_timestep):
         """
         Docstring todo
         """
@@ -70,7 +70,6 @@ class Disease_Propagator:
         # Initialize compartment size time series
         S_t = [len(self.S)]  # Number of susceptibles
         I_t = [len(self.I)]  # Number of infected
-        contacts_per_timestep = 10
         simulation_time = 0
         while simulation_time < self.time_limit:
             # ------------------------------------------------------------------------------ #
@@ -87,7 +86,7 @@ class Disease_Propagator:
                 weights = [network.edges[edge_ID]["weights"][node_ID] for edge_ID in edge_IDs]
                 neighbor_nodes = [edge_ID[1] for edge_ID in edge_IDs]
 
-                neighbor_nodes_random = np.random.choice(neighbor_nodes,contacts_per_timestep,weights)    
+                neighbor_nodes_random = np.random.choice(neighbor_nodes,contacts_per_timestep,weights)
                 for neighbor_node_random in neighbor_nodes_random:
                     self.interaction(network.nodes[node_ID]["person"], network.nodes[neighbor_node_random]["person"])
 
