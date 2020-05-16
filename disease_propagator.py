@@ -2,6 +2,7 @@ import numpy as np
 import random
 import copy
 
+from contact_counter import Contact_Counter
 
 class Disease_Propagator:
     def __init__(
@@ -10,7 +11,8 @@ class Disease_Propagator:
         time_until_recovery,
         mean_time_until_quarantine,
         std_dev_time_until_quarantine,
-        asymptomatic_probabilty
+        asymptomatic_probabilty,
+        infection_probability
     ):
         self.time_limit = time_limit
 
@@ -20,6 +22,7 @@ class Disease_Propagator:
             "std_dev": std_dev_time_until_quarantine,
         }
         self.asymptomatic_probabilty = asymptomatic_probabilty
+        self.infection_probability = infection_probability
 
     def infect(self, person):
         self.S.remove(person.ID)
@@ -38,12 +41,11 @@ class Disease_Propagator:
         person.time_to_quarantine = time if time > 0 else 0
         self.I.append(person.ID)
 
-    def interaction(self, person1, person2):
-        if person1.ID in self.S and person2.ID in self.I:
-            self.infect(person1)
-        elif person1.ID in self.I and person2.ID in self.S:
+    def interaction(self, person2):
+        if person2.ID in self.S:
             self.infect(person2)
 
+    # MAIN ---------------------------------------------------------------------
     def simulate(self, network, p, number_of_first_infected, contacts_per_timestep):
         """
         Docstring todo
@@ -55,6 +57,10 @@ class Disease_Propagator:
         population = network.get_population()
         self.S = list(population.keys())  # Susceptibles
         self.I = []
+        self.R = []
+
+        # Initialize contact counter
+        #self.contact_counter = Contact_Counter(population.keys())
 
         # ------------------------------------------------------------------------------ #
         # First infected
@@ -74,27 +80,26 @@ class Disease_Propagator:
             # Simulate one random interaction process for each person in population
             # ------------------------------------------------------------------------------ #
             # We go randomly thru the population
-            random_order = np.random.permutation(population_size)
+            #random_order = np.random.permutation(population_size)
 
             #For every person we draw N random contacts from therer contacts list
             #and try to infect them this is depending on weights
-            for node_ID in random_order:
-                node = network.nodes[node_ID]
+            for node_ID in self.I:
                 edge_IDs = network.edges(node_ID)
                 weights = [network.edges[edge_ID]["weights"][node_ID] for edge_ID in edge_IDs]
                 neighbor_nodes = [edge_ID[1] for edge_ID in edge_IDs]
 
                 neighbor_nodes_random = np.random.choice(neighbor_nodes,contacts_per_timestep,weights)
                 for neighbor_node_random in neighbor_nodes_random:
-                    if random.uniform(0,1) < 0.1:
-                        self.interaction(network.nodes[node_ID]["person"], network.nodes[neighbor_node_random]["person"])
+                    if random.uniform(0,1) < self.infection_probability:
+                        self.interaction(network.nodes[neighbor_node_random]["person"])
 
             # Random infection in public
-            infected = []
+            """infected = []
             for ID in copy.deepcopy(self.S):
                 person = network.nodes[ID]["person"]
-                if random.uniform(0, 1) < p * len(self.I) / (len(self.S) + len(self.I)):
-                    self.infect(person)
+                if random.uniform(0, 1) < p * len(self.I) / (len(self.S) + len(self.I) + len(self.R)):
+                    self.infect(person)"""
 
             # Quarantining infectious people
             # or recovering them if they were asymptotic
@@ -103,13 +108,13 @@ class Disease_Propagator:
                 person = network.nodes[ID]["person"]
                 person.time_to_quarantine -= 1
                 if person.time_to_quarantine < 1:
-                    quarantined.append(person.ID)
+                    quarantined.append(ID)
                     if person.asymptomatic:
                         person.asymptomatic = False
-                        self.S.append(person.ID)
+                        self.R.append(ID)
                     else:
                         person.time_to_recovery = self.time_until_recovery
-                        self.Q.append(person.ID)
+                        self.Q.append(ID)
             for ID in quarantined:
                 self.I.remove(ID)
 
@@ -119,8 +124,8 @@ class Disease_Propagator:
                 person = network.nodes[ID]["person"]
                 person.time_to_recovery -= 1
                 if person.time_to_recovery < 1:
-                    recovered.append(person.ID)
-                    self.S.append(person.ID)
+                    recovered.append(ID)
+                    self.R.append(ID)
             for ID in recovered:
                 self.Q.remove(ID)
 
@@ -129,5 +134,9 @@ class Disease_Propagator:
             I_t.append(len(self.I) + len(self.Q))
 
             simulation_time += 1
+
+        # Average contact counts
+        #self.contact_counter.calculate_average_daily_contacts(self.time_limit)
+        #average_daily_contact = self.contact_counter.calculate_population_average_daily_contacts()
 
         return (S_t, I_t)

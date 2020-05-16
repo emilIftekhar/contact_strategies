@@ -2,6 +2,7 @@ import network
 import random
 import copy
 import numpy
+import networkx as nx
 
 class Network_Handler:
     def __init__(self, base_network):
@@ -67,6 +68,7 @@ class Network_Handler:
         return temp_network
 
     def analyze_network(self, G):
-        nx.info(network_base)
-        nx.average_shortest_path_length(network_base)
-        nx.average_clustering(network_base)
+        print(nx.info(G))
+        print("Average_shortest_path_length {}.".format(nx.average_shortest_path_length(G)))
+        print("Clustering coefficient {}.".format(nx.average_clustering(G)))
+        print("Degree distribution {}.".format(nx.degree_histogram(G)))

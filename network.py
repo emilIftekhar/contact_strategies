@@ -30,7 +30,6 @@ class Network(nx.Graph):
 
         for node in self.nodes:
             for ID in list(self.edges(node)):
-                #if type(self.edges[ID]["weights"]) is None:
                 self.edges[ID]["weights"][node] = 1/len(self.edges(node))
 
     def create_population_dict(self):
